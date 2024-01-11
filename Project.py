@@ -8,6 +8,8 @@ Created on Tue Jan  9 15:22:57 2024
 import streamlit as st
 import time
 import mysql.connector
+import pytz
+from datetime import datetime
 
 image1_url = '''
     <style>
@@ -34,8 +36,9 @@ ag=st.slider('Enter the Annual Growth',min_value=0,max_value=100)
 button=st.button('Calculate')
 
 
-
-now=time.strftime('%Y-%m-%d %H:%M:%S')
+IST = pytz.timezone('America/Chicago')
+now=datetime.now(IST)
+now=now.strftime('%Y-%m-%d %H:%M:%S')
 
 if button:
     formula=price*ag 
