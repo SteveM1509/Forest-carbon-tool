@@ -40,7 +40,7 @@ deferral=st.selectbox('Select the deferral period',list(range(0,125,5)),index=No
 
 if name and ftype and state and choice and deferral:
     l3,r3=st.columns(2)
-    submit=l3.button('Submit')
+    submit=l3.link_button('Submit',url='https://forest-carbon-tool-page2.streamlit.app/')
     add=r3.button('Add another forest type')
 else:
     st.markdown('**:red[There are missing fields!]**')
