@@ -9,12 +9,9 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 
-st.markdown('#### Your previous choices')
-prev_choice = pd.read_csv('temp.csv',index_col=0)
 
 submit=None
 
-st.table(prev_choice)
 
 sell = st.selectbox('If you were to sell timber today, who would buy it?',['Sawmill','Pulp','Biomass','None',"I don't know"],index=None)
 hard,soft = st.columns(2)
