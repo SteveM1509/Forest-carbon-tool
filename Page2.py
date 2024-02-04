@@ -33,7 +33,7 @@ roi = st.number_input('Minimum acceptable rate of return in percentage')
 ep = st.number_input('Expected price of carbon credit')
 
 if sell and roi and ep:
-    submit = st.button('Submit')
+    submit = st.button('Calculate')
 else:
     st.markdown('**:red[There are missing fields!]**')
 
