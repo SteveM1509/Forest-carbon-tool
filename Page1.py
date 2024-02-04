@@ -8,7 +8,16 @@ Created on Tue Jan  9 15:22:57 2024
 import streamlit as st
 import numpy as np
 import pandas as pd
+from streamlit.components.v1 import html
 
+
+def open_page(url):
+    open_script= """
+        <script type="text/javascript">
+            window.open('%s', '_blank').focus();
+        </script>
+    """ % (url)
+    html(open_script)
 
 if 'inputs' not in st.session_state:
     st.session_state['inputs']=[]
@@ -40,8 +49,9 @@ deferral=st.selectbox('Select the deferral period',list(range(0,125,5)),index=No
 
 if name and ftype and state and choice and deferral:
     l3,r3=st.columns(2)
-    submit=l3.link_button('Submit',url='https://forest-carbon-tool-page2.streamlit.app/')
+    submit=l3.button('Submit', on_click=open_page, args=('https://forest-carbon-tool-page2.streamlit.app',))
     add=r3.button('Add another forest type')
+    print(submit)
 else:
     st.markdown('**:red[There are missing fields!]**')
 
@@ -69,11 +79,30 @@ if add:
     st.session_state['inputs'].append(d)
     st.rerun()
 
+
 if submit:
+    d={'Name':[],'Forest Type':[],'State':[],'Inventory Data Type':[],'Age':[],'Acres':[]
+       ,'dbh':[],'height':[],'Deferral Period':[]}
+    d['Name'].append(name)
+    d['Forest Type'].append(ftype)
+    d['State'].append(state)
+    d['Inventory Data Type'].append(choice)
+    if choice=='Age':
+        d['Age'].append(age)
+        d['Acres'].append(acres)
+        d['dbh'].append('Not Selected')
+        d['height'].append('Not Selected')
+    elif choice=='Avg DBH and Height':
+        d['Age'].append('Not Selected')
+        d['Acres'].append(acres)
+        d['dbh'].append(dbh)
+        d['height'].append(height)
+    d['Deferral Period'].append(deferral)
+    d=pd.DataFrame(d)
+    d=d.T
+    d.columns=[f'Choice{len(st.session_state["inputs"])+1}']
+    st.session_state['inputs'].append(d)
     temp=st.session_state['inputs'][0]
     for i in st.session_state['inputs'][1:]:
         temp=pd.concat([temp,i],axis=1)
     temp.to_csv('temp.csv')
-    
-
-
