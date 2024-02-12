@@ -23,7 +23,7 @@ image1_url = '''
 st.markdown(image1_url, unsafe_allow_html=True)
 
 q1=q2=q3=button=None # Questions
-p=i=n=t=a=v0=None # Parameters
+p=i=n=t=a=v0=vn=None # Parameters
 
 st.markdown("""
             ## Forest Carbon and Market Decision Support Tool
