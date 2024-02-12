@@ -110,11 +110,11 @@ if button:
         vn=num/(((1+i)**t)-1)
     
     if vn and v0:
-        st.markdown(f'#### :green[The present value is {v0} and the future value is {vn}]')
+        st.markdown(f'#### :green[The present value is {round(v0,2)} and the future value is {round(vn,2)}]')
     elif vn:
-        st.markdown(f'#### :green[The future value is {vn}]')
+        st.markdown(f'#### :green[The future value is {round(vn,2)}]')
     elif v0:
-        st.markdown(f'#### :green[The present value is {v0}]')
+        st.markdown(f'#### :green[The present value is {round(v0,2)}]')
     
     
     # mydb = mysql.connector.connect(
