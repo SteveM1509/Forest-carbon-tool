@@ -49,7 +49,7 @@ deferral=st.selectbox('Select the deferral period',list(range(0,125,5)),index=No
 
 if name and ftype and state and choice and deferral:
     l3,r3=st.columns(2)
-    submit=l3.button('Submit', on_click=open_page, args=('https://forest-carbon-tool-page2.streamlit.app',))
+    submit=l3.button('Submit', on_click=open_page, args=('https://www.canr.msu.edu/socioeconomics/Carbon-Econ-Tool/carbon-tool-page2',))
     add=r3.button('Add another forest type')
     print(submit)
 else:
