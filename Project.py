@@ -6,10 +6,20 @@ Created on Tue Jan  9 15:22:57 2024
 """
 
 import streamlit as st
-import time
-import mysql.connector
-import pytz
-from datetime import datetime
+import pandas as pd
+
+def results():
+    for i in st.session_state['selections']:
+        right4.table(i)
+
+if 'selections' not in st.session_state:
+    st.session_state['selections']=[]
+if 'sub' not in st.session_state:
+    st.session_state['sub']=False
+if 'pf' not in st.session_state:
+    st.session_state['pf']=False
+if 'pf_click' not in st.session_state:
+    st.session_state['pf_click']=False
 
 image1_url = '''
     <style>
@@ -22,99 +32,79 @@ image1_url = '''
     '''
 st.markdown(image1_url, unsafe_allow_html=True)
 
-q1=q2=q3=button=None # Questions
-p=i=n=t=a=v0=vn=None # Parameters
+q1=q2=q3=q4=q5=q6=q7=sub=present=future=None
 
 st.markdown("""
-            ## Forest Carbon and Market Decision Support Tool
+            ## Forest Economics and Decision Support
             """)
+            
+cf, fc, fv = st.tabs(['Cash Flow','Finanical Criterion','Forest Value'])
 
-st.markdown("""#### How often does the cash flow occur during the investment project or rotation length? """)
+q1 = cf.selectbox("How often does the cash flow occur during the investment project or rotation length?",['Only Once','Every Year (Annual)',
+                                                                                                         'Every nth year (Periodic)'],
+                  index=None)
 
-st.markdown("#### Is it only once (Single Sum)?")
+left, right = cf.columns(2)
 
-q1 = st.radio('Choose an option',
-              ['Yes','No'], index=None)
+q2 = left.number_input('Years revenue occurs',step=1)
+q3=right.number_input('Enter the value', step=1)
 
-if q1=='Yes':
-    v0=st.number_input('Enter the Present Value of single sum as a number',key='1')
-    i=st.number_input('Enter the interest rate in percentage',key='2')
-    n=st.number_input('Enter the number of interest bearing periods',key='3')
-    if v0 and i and n:
-        button=st.button('Calculate Future Value of Single Sum',key='4', type="primary")
+left2, right2 = cf.columns(2)
 
-elif q1=='No':
-    st.markdown("#### Is it every year (Annual Series)?")
+q4=left2.number_input('Enter the rate of return (PERCENTAGE)', step=1)
+
+if q1=='Every nth year (Periodic)':
+    q5=right2.number_input('Enter the period',step=1)
+
+q6=cf.radio('Is it revenue or cost?',['Revenue','Cost'],index=None)
+
+left3,right3=cf.columns(2)
+
+q7=left3.number_input('Enter the Number of Years/Rotation',min_value=0, max_value=200, step=5)
+right3.markdown("##### Note: Leave this blank if this is a perpetual cashflow")
+
+left4, right4 = cf.columns(2)
+
+results()
+
+if q1 and q2 and q3 and q4 and (q1!='Every nth year (Periodic)' or q5) and q6 and q7:
+    sub=left4.button('Submit')
+
+if sub:
+    d={'Cash Flow':[q1],'Years Revenue':[q2],'Value':[q3],'Rate of Return':[q4],'Period':[q5],'Revenue/Cost':[q6],'Years/Rotation':[q7]}
+    choice=len(st.session_state['selections'])+1
+    st.session_state['selections'].append(pd.DataFrame(d, index=[f'Choice{choice}']).T)
+    #st.markdown('**:green[Data submitted successfully!]**')
+    st.session_state['sub']=True
+    st.rerun()
     
-    q2= st.radio('Choose an option',
-                  ['Yes','No'], index=None,key='5')
+if st.session_state['sub']:
+    present = left4.button('Calculate Present Value')
+    future = left4.button('Calculate Future Value')
+    if present:
+        st.session_state['pf']='p'
+        st.session_state['pf_click']=True
+        st.session_state['sub']=False
+    elif future:
+        st.session_state['pf']='f'
+        st.session_state['pf_click']=True
+        st.session_state['sub']=False
     
-    if q2=='Yes':
-        st.markdown("#### Does it go on forever or end after certain years?")
-        q3=st.radio("Choose an option",['Goes on forever','Ends in n years'], index=None,key='6')
         
-        if q3=='Goes on forever':
-            a=st.number_input('Enter the equal annual payment',key='7')
-            i=st.number_input('Enter the interest rate in percentage',key='8')
-            if a and i:
-                button=st.button('Calculate Present Value',key='9', type="primary")
-        elif q3=='Ends in n years':
-            a=st.number_input('Enter the equal annual payment',key='10')
-            i=st.number_input('Enter the interest rate in percentage',key='11')
-            n=st.number_input('Enter the number of interest bearing periods',key='12')
-            if a and i and n:
-                button=st.button('Calculate Present and Future Value of Single Sum',key='13', type="primary")
-    elif q2=='No':
-        st.markdown("#### So, it is periodic")
-        st.markdown("#### Does it go on forever or end after certain years?")
-        q3=st.radio("Choose an option",['Goes on forever','Ends in n years'], index=None,key='14')
-        
-        if q3=='Goes on forever':
-            p=st.number_input('Enter equal periodic payment',key='15')
-            i=st.number_input('Enter the interest rate in percentage',key='16')
-            t=st.number_input('Enter the interval between periodic payment',key='17')
-            if p and i and t:
-                button=st.button('Calculate Present Value',key='18', type="primary")
-        elif q3=='Ends in n years':
-            p=st.number_input('Enter equal periodic payment',key='19')
-            i=st.number_input('Enter the interest rate in percentage',key='20')
-            t=st.number_input('Enter the interval between periodic payment',key='21')
-            n=st.number_input('Enter the number of interest bearing periods',key='22')
-            if p and i and n and t:
-                button=st.button('Calculate Present and Future Value',key='23', type="primary")
+if st.session_state['pf_click']:
+    # do some calculations and append the result to the dataframe
+    #st.rerun()
+    aa=left4.button('Add Another')
+    if aa:
+        st.session_state['pf_click']=False
+        st.session_state['pf']=False
+        st.rerun()
+    
 
-IST = pytz.timezone('America/Chicago')
-now=datetime.now(IST)
-now=now.strftime('%Y-%m-%d %H:%M:%S')
 
-if button:
-    if (q1,q2,q3)==('Yes',None,None):
-        vn=v0*((1+i)**n)
     
-    elif (q1,q2,q3)==('No','Yes','Goes on forever'):
-        v0=a/i
-    
-    elif (q1,q2,q3)==('No','Yes','Ends in n years'):
-        num=a*(((1+i)**n)-1)
-        den=i*((1+i)**n)
-        v0=num/den
-        vn=num/i
-    
-    elif (q1,q2,q3)==('No','No','Goes on forever'):
-        v0=p/(((1+i)**t)-1)
-    
-    elif (q1,q2,q3)==('No','No','Ends in n years'):
-        num=p*(((1+i)**n)-1)
-        den=(((1+i)**t)-1)*((1+i)**n)
-        v0=num/den
-        vn=num/(((1+i)**t)-1)
-    
-    if vn and v0:
-        st.markdown(f'#### :green[The present value is {round(v0,2)} and the future value is {round(vn,2)}]')
-    elif vn:
-        st.markdown(f'#### :green[The future value is {round(vn,2)}]')
-    elif v0:
-        st.markdown(f'#### :green[The present value is {round(v0,2)}]')
+
+
     
     
     # mydb = mysql.connector.connect(
@@ -127,3 +117,5 @@ if button:
     # mycursor.execute(f"insert into sample values ('{dbh}','{price}','{ag}','{formula}','{now}')")
     # mydb.commit()
     # mycursor.close()
+
+
