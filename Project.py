@@ -79,16 +79,41 @@ if sub:
     st.rerun()
     
 if st.session_state['sub']:
-    present = left4.button('Calculate Present Value')
-    future = left4.button('Calculate Future Value')
-    if present:
-        st.session_state['pf']='p'
-        st.session_state['pf_click']=True
-        st.session_state['sub']=False
-    elif future:
-        st.session_state['pf']='f'
-        st.session_state['pf_click']=True
-        st.session_state['sub']=False
+    if not st.session_state['pf']:
+        present = left4.button('Calculate Present Value')
+        future = left4.button('Calculate Future Value')
+        if present:
+            st.session_state['pf']='p'
+            st.session_state['pf_click']=True
+            st.session_state['sub']=False
+            
+            st.rerun()
+            
+        elif future:
+            st.session_state['pf']='f'
+            st.session_state['pf_click']=True
+            st.session_state['sub']=False
+            
+            st.rerun()
+    
+    elif st.session_state['pf']=='p':
+        present = left4.button('Calculate Present Value')
+        if present:
+            st.session_state['pf']='p'
+            st.session_state['pf_click']=True
+            st.session_state['sub']=False
+            
+            st.rerun()
+    
+    elif st.session_state['pf']=='f':
+        future = left4.button('Calculate Future Value')
+        if future:
+            st.session_state['pf']='f'
+            st.session_state['pf_click']=True
+            st.session_state['sub']=False
+            
+            st.rerun()
+        
     
         
 if st.session_state['pf_click']:
@@ -97,7 +122,7 @@ if st.session_state['pf_click']:
     aa=left4.button('Add Another')
     if aa:
         st.session_state['pf_click']=False
-        st.session_state['pf']=False
+        #st.session_state['pf']=False
         st.rerun()
     
 
@@ -117,5 +142,3 @@ if st.session_state['pf_click']:
     # mycursor.execute(f"insert into sample values ('{dbh}','{price}','{ag}','{formula}','{now}')")
     # mydb.commit()
     # mycursor.close()
-
-
