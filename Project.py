@@ -67,7 +67,7 @@ left4, right4 = cf.columns(2)
 
 results()
 
-if q1 and q2 and q3 and q4 and (q1!='Every nth year (Periodic)' or q5) and q6 and q7:
+if q1 and q2 and q3 and q4 and (q1!='Every nth year (Periodic)' or q5) and q6 and q7 and not st.session_state['pf_click']:
     sub=left4.button('Submit')
 
 if sub:
