@@ -148,7 +148,13 @@ elif condition2:
 if sub:
     if not q7 and q1 in ['Every Year (Annual)','Every nth year (Periodic)']:
         q7='\u221e'
-    d={'Cash Flow':[q1],'Years Revenue':[q2],'Value':[q3],'Rate of Return':[q4],'Period':[q5],'Revenue/Cost':[q6],'Years/Rotation':[q7]}
+    if q1=='Every nth year (Periodic)':
+        q1_temp='Periodic'
+    elif q1=='Every Year (Annual)':
+        q1_temp = 'Annual'
+    else:
+        q1_temp=q1
+    d={'Cash Flow':[q1_temp],'Years Revenue':[q2],'Value':[q3],'Rate of Return':[q4],'Period':[q5],'Revenue/Cost':[q6],'Years/Rotation':[q7]}
     choice=len(st.session_state['selections'])+1
     st.session_state['selections'].append(pd.DataFrame(d, index=[f'Choice{choice}']).T)
     #st.markdown('**:green[Data submitted successfully!]**')
