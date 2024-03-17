@@ -43,13 +43,13 @@ image1_url = '''
     '''
 st.markdown(image1_url, unsafe_allow_html=True)
 
-q1=q2=q3=q4=q5=q6=q7=sub=present=future=None
+q1=q2=q3=q4=q5=q6=q7=sub=present=future=delete=None
 
 st.markdown("""
             ## Forest Economics and Decision Support
             """)
             
-cf, sink, fc, fv = st.tabs(['Cash Flow','Sinking fund','Finanical Criterion','Forest Value'])
+cf, sink, fv = st.tabs(['Finanical Criterion','Sinking fund','Forest Value'])
 
 q1 = cf.selectbox("How often does the cash flow occur during the investment project or rotation length?",['Only Once','Every Year (Annual)',
                                                                                                          'Every nth year (Periodic)'],
@@ -57,7 +57,11 @@ q1 = cf.selectbox("How often does the cash flow occur during the investment proj
 
 left, right = cf.columns(2)
 
-q2 = right.number_input('Years revenue occurs',step=1)
+if q1 != 'Every nth year (Periodic)':
+    if q1=='Every Year (Annual)':
+        q2 = right.number_input('Years revenue occurs',step=1,value=1)
+    else:
+        q2 = right.number_input('Years revenue occurs',step=1)
 q3=left.number_input('Enter the value')
 
 left2, right2 = cf.columns(2)
@@ -78,27 +82,72 @@ left3,right3=cf.columns(2)
 q7=left3.number_input('Enter the Number of Years/Rotation',min_value=0, max_value=200, step=5)
 right3.markdown("##### Note: Leave this blank if this is a perpetual cashflow")
 
-left4, right4, equations4 = cf.columns(3)
+left4, right4, equations4 = cf.columns(3, gap="medium")
+choices = [i.columns[0] for i in st.session_state['selections']]
+delete_choice = left4.selectbox('Delete a choice', choices, index=None)
+if delete_choice:
+    right4.markdown('\n\n')
+    right4.markdown('\n\n')
+    delete = right4.button('Delete',type="primary")
+if delete:
+    temp = int(delete_choice[-1])
+    temp=temp-1
+    st.session_state['selections'].pop(temp)
+    st.session_state['equations'].pop(temp)
+    for i in range(len(st.session_state['selections'])):
+        st.session_state['selections'][i].columns=[f'Choice{i+1}']
+    
+    st.rerun()    
 
 results()
 
-if q1 and q3 and q4 and (q1!='Every nth year (Periodic)' or q5) and q6 and not st.session_state['pf_click'] and not st.session_state['add_another'] and not st.session_state['sub']:
-    if q7>q2 or q7==0:
-        sub=left4.button('Submit')
+condition1 = q1 and q3 and q4 and q6 # Basics required for all things
+condition2 = not st.session_state['pf_click'] and not st.session_state['add_another'] and not st.session_state['sub'] # Don't display while they are in a add another or another step for easy process flow
+condition3 = q1!='Every nth year (Periodic)' or q5 # If periodic q5 is mandatory else fine
+
+if condition1 and condition2 and condition3:
+    if q1 == 'Only Once' or q7==0 or (q1 == 'Every nth year (Periodic)' and q7>q5) or (q1 == 'Every Year (Annual)' and q7>q2) : # If q1 is single sum, ignore everything. Else, next check if it is terminating. Next if periodic, make sure that q7 is the highest. Finally, if it is annual series, make sure q7 is greater than q2
+        if st.session_state['pf']:
+            text = 'Add Another'
+        else:
+            text='Submit'
+        sub=left4.button(text)
         
         if st.session_state['pf']=='f' and q1 in ('Every Year (Annual)', 'Every nth year (Periodic)') and not q7 and sub:
             sub=False
             left4.markdown('**:red[Error! Cannot submit and calculate future value for a perpetual series]**')
+            
+        if st.session_state['pf']:
+            calc = left4.button('Calculate Net Value')
+            
+            if calc:
+                s=0
+                for i in st.session_state['selections']:
+                    if 'Present Value' in i.index:
+                        temp='Present Value'
+                    elif 'Future Value' in i.index:
+                        temp='Future Value'
+                        
+                    if i.loc['Revenue/Cost'][0]=='Revenue':
+                        s+=i.loc[temp][0]
+                    elif i.loc['Revenue/Cost'][0]=='Cost':
+                        s-=i.loc[temp][0]
+                if s>0:
+                    left4.markdown(f'#### :green[Net {temp.split(" ")[0]} value is {round(s,2)}]')
+                elif s<=0:
+                    left4.markdown(f'#### :red[Net {temp.split(" ")[0]} Value is {round(s,2)}]')
         
     else:
         left4.markdown("""**:red['Number of years/rotation' must be 0 for present value or greater than 'Years revenue occurs' for future values]**""")
 
-elif not st.session_state['sub'] and not st.session_state['pf_click'] and not st.session_state['add_another']:
+elif condition2:
     left4.markdown("""
                 **:red[There are missing fields!]**
                 """)
 
 if sub:
+    if not q7 and q1 in ['Every Year (Annual)','Every nth year (Periodic)']:
+        q7='\u221e'
     d={'Cash Flow':[q1],'Years Revenue':[q2],'Value':[q3],'Rate of Return':[q4],'Period':[q5],'Revenue/Cost':[q6],'Years/Rotation':[q7]}
     choice=len(st.session_state['selections'])+1
     st.session_state['selections'].append(pd.DataFrame(d, index=[f'Choice{choice}']).T)
@@ -136,22 +185,18 @@ if st.session_state['sub']:
             
     
     elif st.session_state['pf']=='p':
-        present = left4.button('Calculate Present Value')
-        if present:
-            st.session_state['pf']='p'
-            st.session_state['pf_click']=True
-            st.session_state['sub']=False
-            
-            st.rerun()
+        st.session_state['pf']='p'
+        st.session_state['pf_click']=True
+        st.session_state['sub']=False
+        
+        st.rerun()
     
     elif st.session_state['pf']=='f':
-        future = left4.button('Calculate Future Value')
-        if future:
-            st.session_state['pf']='f'
-            st.session_state['pf_click']=True
-            st.session_state['sub']=False
-            
-            st.rerun()
+        st.session_state['pf']='f'
+        st.session_state['pf_click']=True
+        st.session_state['sub']=False
+        
+        st.rerun()
             
 
 def calculate_result():
@@ -259,27 +304,12 @@ if st.session_state['pf_click']:
 
 if st.session_state['add_another']:
     
-    aa=left4.button('Add Another')
-    calc = left4.button('Calculate Net Value')
+    aa=True
     if aa:
         #st.session_state['pf_click']=False
         #st.session_state['pf']=False
         st.session_state['add_another']=False
         st.rerun()
-    
-    if calc:
-        s=0
-        for i in st.session_state['selections']:
-            if 'Present Value' in i.index:
-                temp='Present Value'
-            elif 'Future Value' in i.index:
-                temp='Future Value'
-                
-            if i.loc['Revenue/Cost'][0]=='Revenue':
-                s+=i.loc[temp][0]
-            elif i.loc['Revenue/Cost'][0]=='Cost':
-                s-=i.loc[temp][0]
-        left4.markdown(f'#### :green[Net value is {round(s,2)}]')
             
     
 
