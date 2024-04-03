@@ -329,10 +329,13 @@ if st.session_state['q4']:
     lev_q1 = lev_df.loc['Cash Flow'][0]
     lev_q2 = lev_df.loc['Years Revenue'][0]
     lev_q7 = lev_df.loc['Years/Rotation'][0]
+    lev_q5 = lev_df.loc['Period'][0]
     if lev_q7=='\u221e':
         lev_q7=0
     if (lev_q1=='Annual' or lev_q1=='Periodic') and lev_q7>0:
         lev_n=lev_q7
+    elif lev_q1=='Periodic':
+        lev_n = lev_q5
     elif st.session_state['pf']=='p':
         lev_n=lev_q2
     elif st.session_state['pf']=='f':
