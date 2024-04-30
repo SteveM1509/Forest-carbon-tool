@@ -7,7 +7,6 @@ Created on Tue Jan  9 15:22:57 2024
 # Make picture smaller. Option to show/unshow pictures
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
-
 import streamlit as st
 import pandas as pd
 from PIL import Image
@@ -174,6 +173,8 @@ if delete_choice:
     right4.markdown('\n\n')
     delete = right4.button('Delete',type="primary")
 if delete:
+    st.session_state['q4']=False
+    st.session_state['calc']=False
     temp = int(delete_choice[-1])
     temp=temp-1
     st.session_state['selections'].pop(temp)
@@ -188,7 +189,7 @@ results()
 condition1 = q1 and q3 and q6 # Basics required for all things
 condition2 = not st.session_state['pf_click'] and not st.session_state['add_another'] and not st.session_state['sub'] # Don't display while they are in a add another or another step for easy process flow
 condition3 = q1!='Every nth year (Periodic)' or q5 # If periodic q5 is mandatory else fine
-condition4 = q1!='Only Once' or q2>0
+condition4 = q1!='Only Once' or q7>0
 
 if condition1 and condition2 and condition3 and condition4:
     if q1 == 'Only Once' or q7==0 or (q1 == 'Every nth year (Periodic)' and q7>q5) or (q1 == 'Every Year (Annual)' and q7>q2) : # If q1 is single sum, ignore everything. Else, next check if it is terminating. Next if periodic, make sure that q7 is the highest. Finally, if it is annual series, make sure q7 is greater than q2
@@ -213,10 +214,11 @@ if condition1 and condition2 and condition3 and condition4:
             right4.markdown('\n')
             right4.markdown('\n')
             right4.markdown('\n')
-            calc = right4.button('Calculate Net Value and other criterion')
+            if len(st.session_state['selections']):
+                calc = right4.button('Calculate Net Value and other criterion')
             
-            if calc:
-                st.session_state['calc']=True
+                if calc:
+                    st.session_state['calc']=True
         
     else:
         left4.markdown("""**:red['Number of years/rotation' must be 0 for present value or greater than 'Years revenue occurs' for future values]**""")
@@ -270,15 +272,15 @@ if st.session_state['q4']:
     else:
         bc_ratio = '\u221e'
     if s>0:
-        left4.markdown(f'#### :green[Net {temp.split(" ")[0]} value is {round(s,2)}]')
+        nv_str = f'#### :green[Net {temp.split(" ")[0]} value is {round(s,2)}]'
         temp = 'increasing'
     elif s<=0:
-        left4.markdown(f'#### :red[Net {temp.split(" ")[0]} Value is {round(s,2)}]')
+        nv_str = f'#### :red[Net {temp.split(" ")[0]} Value is {round(s,2)}]'
         temp = 'decreasing'
     if not costs or bc_ratio>=1:
-        left4.markdown(f'#### :green[Benefit to Cost ratio is {bc_ratio}]')
+        bc_str = f'#### :green[Benefit to Cost ratio is {bc_ratio}]'
     elif costs and bc_ratio<1:
-        left4.markdown(f'#### :red[Benefit to Cost ratio is {bc_ratio}]')
+        bc_str = f'#### :red[Benefit to Cost ratio is {bc_ratio}]'
         
     res=0
     irr=0
@@ -302,7 +304,6 @@ if st.session_state['q4']:
         res_list=[]
         
         if len(ran)>30:
-            print('Something went wrong!!!')
             break
         
         for j in range(len(ran)):
@@ -321,9 +322,9 @@ if st.session_state['q4']:
                 break  
         power+=1
     if irr:
-        left4.markdown(f'#### The IRR value is {irr}')
+        irr_str = f'#### The IRR value is {irr}'
     else:
-        left4.markdown('#### The IRR does not exist')
+        irr_str = '#### The IRR does not exist'
         
     lev_df = st.session_state['selections'][-1]
     lev_q1 = lev_df.loc['Cash Flow'][0]
@@ -349,8 +350,29 @@ if st.session_state['q4']:
         lev = s/(((1+q4)**lev_n)-1)
     
     if aei and lev:
-        left4.markdown(f'#### The LEV is {round(lev,2)}')
-        left4.markdown(f'#### The AEI is {round(aei,2)}')
+        lev_str = f'#### The LEV is {round(lev,2)}'
+        aei_str = f'#### The AEI is {round(aei,2)}'
+    
+    metrics_option = left4.selectbox('Select the metrics you want to display', ['Net Value','Benefit to Cost Ratio',
+                                                                                'Internal rate of return', 'Land Expectation value',
+                                                                                'Equivalent Annual Income','All metrics'])
+    if metrics_option =='All metrics':
+        left4.markdown(nv_str)
+        left4.markdown(bc_str)
+        left4.markdown(irr_str)
+        left4.markdown(lev_str)
+        left4.markdown(aei_str)
+        
+    elif metrics_option=='Net Value':
+        left4.markdown(nv_str)
+    elif metrics_option=='Benefit to Cost Ratio':
+        left4.markdown(bc_str)
+    elif metrics_option == 'Internal rate of return':
+        left4.markdown(irr_str)
+    elif metrics_option == 'Land Expectation value':
+        left4.markdown(lev_str)
+    elif metrics_option=='Equivalent Annual Income':
+        left4.markdown(aei_str)
     
     
 
@@ -374,8 +396,9 @@ if sub:
 if st.session_state['sub']:
     if not st.session_state['pf']:
         if q7: # Providing both buttons if q7 is entered
-            present = left4.button('Calculate Present Value')
-            future = left4.button('Calculate Future Value')
+            left4.markdown("**Please indicate what values you will calculate at the end**")
+            present = left4.button('Present Value')
+            future = left4.button('Future Value')
             if present:
                 st.session_state['pf']='p'
                 st.session_state['pf_click']=True
